@@ -1,19 +1,16 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 import {
   Button,
   Checkbox,
   Form,
   Input,
   InputNumber,
-  Typography,
   Divider,
-  Steps,
   Space,
   message,
-  notification,
-  Tooltip,
+  Modal,
+  notification
 } from "antd";
-const { Title } = Typography;
 import {
   PlusOutlined,
   MinusCircleOutlined,
@@ -23,58 +20,16 @@ import {
   FileSearchOutlined,
 } from "@ant-design/icons";
 
-import { useCreateProductMutation } from "../../../stores/productStore";
+import { useUpdateProductMutation } from '../../../../stores/productStore';
+import { moneyValidator, numberValidator } from "./../../../../utils/validators";
 
-import { moneyValidator, numberValidator } from "../../../utils/validators";
-
-export default function CreateProduct() {
+export const UpdateProductModal = ({ open, onClose, productId, product, refetch }) => {
   const [form] = Form.useForm();
   const [messageApi, contextHolderMessage] = message.useMessage();
   const [notificationApi, contextHolderNotification] = notification.useNotification();
-  const [product, setProduct] = useState({
-    name: "",
-    description: "",
-    price: 0,
-    quantity: 0,
-    category: "",
-    tags: [],
-    status: true
-  });
+  const [updateDisabled, setUpdateDisabled] = useState(false);
 
-  const [createProduct, { isLoading: createProductLoading, isError: createProductIsError, error: createProductError }] = useCreateProductMutation();
-
-  const handleCreateProductSubmit = async (newProduct) => {
-    const rawTags = newProduct?.tags?.map(tag => tag?.tag);
-    const productToSend = {
-      ...product,
-      status: newProduct?.status ?? false,
-      tags: rawTags,
-    }
-    try {
-      const productCreated = await createProduct(productToSend);
-      if (!productCreated.data) {
-        messageApi?.open({
-          type: 'error',
-          content: "Error creating the product",
-        });
-        return;
-      }
-      notificationApi.open({
-        message: 'Created',
-        description:
-          'Product created successfully.',
-        showProgress: true,
-        pauseOnHover: true,
-      });
-      form.resetFields();
-    } catch (error) {
-      console.error({error});
-      messageApi?.open({
-        type: 'error',
-        content: "Error creating the product",
-      });
-    }
-  }
+  const [updateProduct, { isLoading, isError, isSuccess, error }] = useUpdateProductMutation();
 
   const handleCreateProductError = (error) => {
     if (!error || !error?.errorFields || error?.errorFields.length === 0) return;
@@ -85,37 +40,85 @@ export default function CreateProduct() {
     });
   }
 
-  const onCheckboxChange = (e) => {
-    setProduct({...product, status: e.target.checked});
-  };
+  const handleUpdateProductSubmit = async (e) => {
+    const rawTags = e?.tags?.map(tag => tag?.tag);
+    try {
+      const data = await updateProduct({
+        id: productId,
+        body: {
+          ...e,
+          tags: rawTags,
+        }
+      });
+      if (!data?.data) {
+        console.error("error");
+        messageApi?.open({
+          type: 'error',
+          content: "Error updating the product",
+        });
+      }
+      notificationApi.open({
+        message: 'Created',
+        description:
+          'Product updated successfully.',
+        showProgress: true,
+        pauseOnHover: true,
+      });
+      await refetch();
+      onClose();
+    } catch (error) {
+      console.error({error});
+      messageApi?.open({
+        type: 'error',
+        content: "Error updating the product",
+      });
+    }
+  }
 
   return (
-    <section
-      style={{
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
-      {contextHolderMessage}
-      {contextHolderNotification}
-      <div style={{ margin: "20px auto" }}>
-        <Title level={3}>Create Product</Title>
-      </div>
-      <Form
+    <>
+      <Modal
+        title={`Update product ${product?.name ?? ""}`}
+        centered
+        open={open}
+        onCancel={() => onClose()}
+        footer={[
+          <Button key="back" onClick={() => onClose()}>
+            Return
+          </Button>,
+        ]}
+        width={"100%"}
+      >
+        {contextHolderMessage}
+        {contextHolderNotification}
+        <Divider />
+        <Space>
+          <Checkbox style={{ textWrap: "nowrap" }} checked={updateDisabled} onChange={(e) => setUpdateDisabled(e.target.checked)}>
+            Update product
+          </Checkbox>
+        </Space>
+        <Form
         name="basic"
         form={form}
         labelCol={{ span: 4 }}
         wrapperCol={{ span: 16 }}
         style={{
-          width: "60%",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
         }}
-        initialValues={{ status: true }}
-        onFinish={async (value) => handleCreateProductSubmit(value)}
+        disabled={!updateDisabled}
+        initialValues={{
+          status: product?.status ?? true,
+          category: product?.category ?? "",
+          description: product?.description ?? "",
+          name: product?.name ?? "",
+          price: product?.price ?? 0,
+          quantity: product?.quantity ?? 0,
+          tags: product?.tags?.map((tag) => ({ tag: tag })) ?? [],
+        }}
+        onFinish={async (value) => handleUpdateProductSubmit(value)}
         onFinishFailed={(value) => handleCreateProductError(value)}
         autoComplete="off"
       >
@@ -129,12 +132,12 @@ export default function CreateProduct() {
           <Input
             placeholder="Input the product name"
             value={product.name}
-            onChange={(e) => {
+            /* onChange={(e) => {
               setProduct({
                 ...product,
                 name: e.target.value,
               });
-            }}
+            }} */
           />
         </Form.Item>
 
@@ -150,12 +153,12 @@ export default function CreateProduct() {
             autoSize={{ minRows: 2, maxRows: 4 }}
             value={product.description}
             allowClear
-            onChange={(e) => {
+            /* onChange={(e) => {
               setProduct({
                 ...product,
                 description: e.target.value,
               });
-            }}
+            }} */
           />
         </Form.Item>
 
@@ -198,12 +201,12 @@ export default function CreateProduct() {
             onInput={(e) => {
               if (Number(e)) return e;
             }}
-            onChange={(e) => {
+            /* onChange={(e) => {
               setProduct({
                 ...product,
                 price: +e,
               });
-            }}
+            }} */
           />
         </Form.Item>
 
@@ -239,10 +242,10 @@ export default function CreateProduct() {
               if (Number(e)) return e;
             }}
             onChange={(e) => {
-              setProduct({
+              /* setProduct({
                 ...product,
                 quantity: +e,
-              });
+              }); */
             }}
           />
         </Form.Item>
@@ -262,10 +265,10 @@ export default function CreateProduct() {
             value={product.category}
             onInput={(e) => (e.target.value = e.target.value.toUpperCase())}
             onChange={(e) => {
-              setProduct({
+              /* setProduct({
                 ...product,
                 category: e.target.value,
-              });
+              }); */
             }}
           />
         </Form.Item>
@@ -316,25 +319,15 @@ export default function CreateProduct() {
             </>
           )}
         </Form.List>
-        <Tooltip title="Product visibility" placement="left">
-          <Form.Item
-            name="status"
-            style={{ width: "30%" }}
-            valuePropName="checked"
-          >
-              <Checkbox style={{ textWrap: "nowrap" }} checked={product.status} onChange={onCheckboxChange}>
-                Product Status
-              </Checkbox>
-          </Form.Item>
-        </Tooltip>
 
         <Divider><PlusSquareOutlined /></Divider>
         <Form.Item>
-          <Button type="primary" htmlType="submit" disabled={createProductLoading}>
-            Submit
+          <Button type="primary" htmlType="submit" disabled={false}>
+            Update
           </Button>
         </Form.Item>
       </Form>
-    </section>
+      </Modal>
+    </>
   );
-}
+};
