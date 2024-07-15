@@ -8,6 +8,8 @@ import {
   BookOutlined,
   GoldOutlined,
   LogoutOutlined,
+  TruckOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import kJunLogo from "./../../assets/logo/k-jun-logo.png";
 
@@ -16,6 +18,11 @@ const items = [
     key: "dashboard",
     label: "Dashboard",
     icon: <DashboardOutlined />,
+  },
+  {
+    key: "tables",
+    label: "Tables",
+    icon: <GoldOutlined />,
   },
   {
     key: "orders",
@@ -33,6 +40,11 @@ const items = [
     ],
   },
   {
+    key: "delivering",
+    label: "Delivering",
+    icon: <TruckOutlined />,
+  },
+  {
     key: "products",
     label: "Menu",
     icon: <BookOutlined />,
@@ -48,9 +60,9 @@ const items = [
     ],
   },
   {
-    key: "tables",
-    label: "Tables",
-    icon: <GoldOutlined />,
+    key: "reservation",
+    label: "Reservations",
+    icon: <CalendarOutlined />,
   },
   {
     type: "divider",

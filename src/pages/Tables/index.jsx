@@ -1,83 +1,69 @@
-import React, { useState } from "react";
-import { Divider, Card, Skeleton, Switch, Tag, Badge } from "antd";
-import {
-  EditOutlined,
-  EllipsisOutlined,
-  SettingOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  MinusCircleOutlined,
-  SyncOutlined,
-} from "@ant-design/icons";
-
-const { Meta } = Card;
+import { useEffect, useState } from "react";
+import { PlusCircleTwoTone } from "@ant-design/icons";
+import { Typography, Tooltip } from "antd";
+const { Title } = Typography;
+import { useLazyGetAllTablesQuery } from "../../stores/tableStore";
+import TableCard from "./components/TableCard";
+import CreateTableFormModal from "./modals/CreateTableFormModal";
+import CreateOrderFormModal from "./modals/CreateOrderFormModal";
 
 export default function Tables() {
-  const [loading, setLoading] = useState(true);
-  const onChange = (checked) => {
-    setLoading(!checked);
-  };
+  const [tables, setTables] = useState([]);
+  const [showCreateTableFormModal, setShowCreateTableFormModal] = useState(false);
+  const [showCreateOrderFormModal, setShowCreateOrderFormModal] = useState(false);
+
+  const [fetchTables, { data: tablesData, isLoading: tablesAreLoading }] = useLazyGetAllTablesQuery();
+
+  useEffect(() => {
+    fetchTables();
+    if (!tablesData) return;
+    setTables(tablesData && tablesData?.length > 0 ? tablesData : []);
+  }, [tablesData]);
+
   return (
-    <>
-      <Switch checked={!loading} onChange={onChange} />
-      <Badge.Ribbon text="Hippies" color="cyan">
-        <Card
-          style={{
-            width: 300,
-            maxHeight: "300px",
-            overflowY: "auto",
-            marginTop: 16,
-          }}
-          actions={[
-            <SettingOutlined key="setting" onClick={() => console.log("open settings")} />,
-            <EditOutlined key="edit" />,
-            <EllipsisOutlined key="ellipsis" />,
-          ]}
-        >
-          <Skeleton loading={loading} active paragraph={{ rows: 1 }}>
-            <Meta title="Table No° 3" description="Capacidad de la mesa: 4" />
-          </Skeleton>
-          <Divider orientation="left" plain>
-            { loading ? "Loading" : "Data" }
-          </Divider>
-          <Skeleton loading={loading} active paragraph={{ rows: 1 }}>
-          <Tag icon={<ClockCircleOutlined />} color="default">
-            waiting
-          </Tag>
-            <p>Inicio: 19:45:05 hrs</p>
-            <p>Order: KJO123456</p>
-          </Skeleton>
-        </Card>
-      </Badge.Ribbon>
-      <Badge.Ribbon text="Hippies">
-        <Card
-          style={{
-            width: 300,
-            maxHeight: "300px",
-            overflowY: "auto",
-            marginTop: 16,
-          }}
-          actions={[
-            <SettingOutlined key="setting" onClick={() => console.log("open settings")} />,
-            <EditOutlined key="edit" />,
-            <EllipsisOutlined key="ellipsis" />,
-          ]}
-        >
-          <Skeleton loading={loading} active paragraph={{ rows: 1 }}>
-            <Meta title="Table No° 3" description="Capacidad de la mesa: 4" />
-          </Skeleton>
-          <Divider orientation="left" plain>
-            { loading ? "Loading" : "Data" }
-          </Divider>
-          <Skeleton loading={loading} active paragraph={{ rows: 1 }}>
-          <Tag icon={<SyncOutlined spin />} color="processing">
-            processing
-          </Tag>
-            <p>Inicio: 19:45:05 hrs</p>
-            <p>Order: KJO123456</p>
-          </Skeleton>
-        </Card>
-      </Badge.Ribbon>
-    </>
+    <div style={{ width: "100%" }}>
+      <header style={{ margin: "10px 0 20px 0", display: "flex", justifyContent: "space-between", padding: "0 35px" }}>
+        <Title level={2}>Tables</Title>
+        <Tooltip title="Create new Table" placement="left">
+          <PlusCircleTwoTone
+            onClick={() => setShowCreateTableFormModal(true)}
+            style={{ fontSize: '26px' }}
+            twoToneColor={"#73CF6B"}
+          />
+        </Tooltip>
+      </header>
+      <div style={{ display: "flex", flexWrap: "wrap", width: "100%" }}>
+        {
+          (!tablesAreLoading && tables.length > 0) && tables?.map(table => {
+            return (
+              <div
+                key={table?._id}
+                style={{ margin: "20px 10px" }}
+              >
+                <TableCard
+                  tableData={table}
+                  loading={tablesAreLoading}
+                  onCreate={() => setShowCreateOrderFormModal(true)}
+                />
+              </div>
+            );
+          })
+        }
+      </div>
+      <CreateTableFormModal
+        open={showCreateTableFormModal}
+        onClose={() => {
+          setShowCreateTableFormModal(false);
+        }}
+        refetch={fetchTables}
+      />
+      <CreateOrderFormModal
+        open={showCreateOrderFormModal}
+        onClose={() => {
+          setShowCreateOrderFormModal(false);
+        }}
+        refetch={fetchTables}
+      />
+    </div>
   );
 }
