@@ -9,12 +9,24 @@ import {
   InputNumber,
   Steps,
   theme,
+  Select,
+  Descriptions,
+  Input,
 } from "antd";
-const { Text } = Typography;
-import { DeleteTwoTone } from "@ant-design/icons";
-import { useLazyGetAllProductsQuery } from "../../../stores/productStore";
+const { Text, Title } = Typography;
+import {
+  DeleteTwoTone,
+  UserAddOutlined,
+  UsergroupAddOutlined,
+  ContactsOutlined,
+  PhoneOutlined,
+  MailOutlined,
+} from "@ant-design/icons";
+import dayjs from "dayjs";
 import SelectProductModal from "./SelectProductModal";
+import { useLazyGetAllProductsQuery } from "../../../stores/productStore";
 import { useLazyGetAllCustomersQuery } from "../../../stores/customerStore";
+import { emailValidator } from "../../../utils/validators";
 
 export default function CreateOrderFormModal({ open, onClose }) {
   const { token } = theme.useToken();
@@ -29,12 +41,22 @@ export default function CreateOrderFormModal({ open, onClose }) {
     customer: null,
     note: "",
   });
+  const [newCustomer, setNewCustomer] = useState({
+    name: "",
+    last_name: "",
+    phone: "",
+    email: "",
+    status: true,
+  });
   const [productsList, setProductsList] = useState([]);
   const [selectedProductsList, setSelectedProductsList] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showProductModal, setShowProductModal] = useState(false);
+  const [isCreateCustomer, setIsCreateCustomer] = useState(false);
+  const [customers, setCustomers] = useState([]);
   const [customersList, setCustomersList] = useState([]);
-  console.log("🚀 ~ CreateOrderFormModal ~ customersList:", customersList)
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomerItems, setSelectedCustomerItems] = useState([null]);
 
   const [fetchProducts, { data: dataProducts, isLoading: isLoadingProducts }] =
     useLazyGetAllProductsQuery();
@@ -50,12 +72,17 @@ export default function CreateOrderFormModal({ open, onClose }) {
     if (dataProducts?.length === 0) return;
     setProductsList(dataProducts ?? []);
   }, [dataProducts]);
-  
+
   useEffect(() => {
     fetchCustomers();
     if (isLoadingCustomers || !dataCustomers) return;
     if (dataCustomers?.length === 0) return;
-    setCustomersList(dataCustomers ?? []);
+    setCustomers(dataCustomers);
+    const selectableCustomers = dataCustomers?.map((customer) => ({
+      value: customer?._id,
+      label: `${customer?.name} ${customer?.last_name}`,
+    }));
+    setCustomersList(selectableCustomers);
   }, [dataCustomers]);
 
   useEffect(() => {
@@ -114,12 +141,12 @@ export default function CreateOrderFormModal({ open, onClose }) {
                   <div style={{ display: "flex" }}>
                     <div style={{ marginRight: "10px" }}>
                       <Text>
-                        Price: <b>{item?.price ?? 0}</b>
+                        Price: <b>$ {item?.price ?? 0}</b>
                       </Text>
                     </div>
                     <div>
                       <Text>
-                        Total: <b>{item?.total ?? 0}</b>
+                        Total: <b>$ {item?.total ?? 0}</b>
                       </Text>
                     </div>
                   </div>
@@ -144,7 +171,154 @@ export default function CreateOrderFormModal({ open, onClose }) {
     },
     {
       title: "Customer",
-      content: <>customer</>,
+      content: (
+        <div style={{ marginTop: "15px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <Title level={4}>Customer</Title>
+            <Button
+              onClick={() => setIsCreateCustomer(!isCreateCustomer)}
+              icon={
+                isCreateCustomer ? (
+                  <UsergroupAddOutlined />
+                ) : (
+                  <UserAddOutlined />
+                )
+              }
+            >
+              {isCreateCustomer ? "Select customer" : "Create new customer"}
+            </Button>
+          </div>
+          <Divider></Divider>
+          {isCreateCustomer ? (
+            <div>
+              <div style={{ display: "flex" }}>
+                <label style={{ width: "10%" }}>Name:</label>
+                <div style={{ width: "80%", marginLeft: "10px" }}>
+                  <Input
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setNewCustomer({
+                        ...newCustomer,
+                        name: value,
+                      });
+                    }}
+                    value={newCustomer.name}
+                    size="large"
+                    placeholder="Name"
+                    style={{ width: "100%" }}
+                    prefix={<ContactsOutlined />}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "flex" }}>
+                <label style={{ width: "10%" }}>Last name:</label>
+                <div style={{ width: "80%", marginLeft: "10px" }}>
+                  <Input
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setNewCustomer({
+                        ...newCustomer,
+                        last_name: value,
+                      });
+                    }}
+                    value={newCustomer.last_name}
+                    size="large"
+                    placeholder="Last name"
+                    style={{ width: "100%" }}
+                    prefix={<ContactsOutlined />}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "flex" }}>
+                <label style={{ width: "10%" }}>Phone:</label>
+                <div style={{ width: "80%", marginLeft: "10px" }}>
+                  <Input
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (isNaN(Number(value))) {
+                        return;
+                      }
+                      setNewCustomer({
+                        ...newCustomer,
+                        phone: value,
+                      });
+                    }}
+                    value={newCustomer.phone}
+                    size="large"
+                    placeholder="Phone"
+                    style={{ width: "100%" }}
+                    prefix={<PhoneOutlined />}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "flex" }}>
+                <label style={{ width: "10%" }}>Email:</label>
+                <div style={{ width: "80%", marginLeft: "10px" }}>
+                  <Input
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setNewCustomer({
+                        ...newCustomer,
+                        email: value,
+                      });
+                    }}
+                    value={newCustomer.email}
+                    status={(emailValidator(newCustomer.email) || (newCustomer.email === "")) ? "" : "error"}
+                    size="large"
+                    placeholder="Email"
+                    style={{ width: "100%" }}
+                    prefix={<MailOutlined />}
+                  />
+                </div>
+              </div>
+              <div style={{ width: "100%", display: "flex", justifyContent: "end", margin: "0 0 10px 0" }}>
+                <Button
+                  disabled={
+                    (!newCustomer.name || !newCustomer.last_name || !newCustomer.phone || !newCustomer.email || !emailValidator(newCustomer.email))
+                  }
+                >
+                  Create customer
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <Select
+                  showSearch
+                  placeholder="Select a customer"
+                  loading={isLoadingCustomers}
+                  filterOption={(input, option) =>
+                    (option?.label ?? "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                  options={customersList ?? []}
+                  onChange={(e) => handleSelectCustomerChange(e)}
+                  size="large"
+                  style={{ width: "150px" }}
+                />
+              </div>
+              <Divider type="vertical" />
+              {selectedCustomer ? (
+                <Descriptions
+                  size="small"
+                  title="User Info"
+                  items={selectedCustomerItems}
+                />
+              ) : (
+                <></>
+              )}
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       title: "Notes",
@@ -185,6 +359,41 @@ export default function CreateOrderFormModal({ open, onClose }) {
     (product) => product?.total <= 0 || !product?.total
   );
 
+  const handleSelectCustomerChange = (value) => {
+    const findedCustomer =
+      customers?.find((customer) => customer?._id === value) ?? null;
+    if (!findedCustomer) {
+      api["error"]({
+        message: "Error",
+        description: "Customer not found. Reload please.",
+      });
+      return;
+    }
+    setSelectedCustomer(findedCustomer);
+    setSelectedCustomerItems([
+      {
+        key: "1",
+        label: "Name",
+        children: `${findedCustomer?.name} ${findedCustomer?.last_name}`,
+      },
+      {
+        key: "2",
+        label: "Phone",
+        children: `${findedCustomer?.phone}`,
+      },
+      {
+        key: "3",
+        label: "Email",
+        children: `${findedCustomer?.email}`,
+      },
+      {
+        key: "4",
+        label: "Created At",
+        children: `${dayjs(findedCustomer?.createdAt).format("DD/MM/YYYY")}`,
+      },
+    ]);
+  };
+
   const items = steps?.map((item) => ({
     key: item.title,
     title: item.title,
@@ -202,6 +411,7 @@ export default function CreateOrderFormModal({ open, onClose }) {
 
   return (
     <>
+      {contextHolder}
       <Modal
         title={`Create order`}
         centered
