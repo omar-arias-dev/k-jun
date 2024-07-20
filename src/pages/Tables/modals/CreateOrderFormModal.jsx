@@ -14,6 +14,7 @@ import {
   Input,
 } from "antd";
 const { Text, Title } = Typography;
+const { TextArea } = Input;
 import {
   DeleteTwoTone,
   UserAddOutlined,
@@ -21,12 +22,14 @@ import {
   ContactsOutlined,
   PhoneOutlined,
   MailOutlined,
+  UserDeleteOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import SelectProductModal from "./SelectProductModal";
 import { useLazyGetAllProductsQuery } from "../../../stores/productStore";
-import { useLazyGetAllCustomersQuery } from "../../../stores/customerStore";
+import { useCreateCustomerMutation, useLazyGetAllCustomersQuery } from "../../../stores/customerStore";
 import { emailValidator } from "../../../utils/validators";
+import { PAYMENT_METHODS } from "../../../common/constants/constants";
 
 export default function CreateOrderFormModal({ open, onClose }) {
   const { token } = theme.useToken();
@@ -51,12 +54,17 @@ export default function CreateOrderFormModal({ open, onClose }) {
   const [productsList, setProductsList] = useState([]);
   const [selectedProductsList, setSelectedProductsList] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [total, setTotal] = useState(0);
   const [showProductModal, setShowProductModal] = useState(false);
+  const [orderWithoutCustomer, setOrderWithoutCustomer] = useState(true);
   const [isCreateCustomer, setIsCreateCustomer] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [customersList, setCustomersList] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedCustomerItems, setSelectedCustomerItems] = useState([null]);
+  const [notes, setNotes] = useState("");
+  const [paymentMethodList, setPaymentMethodList] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState("");
 
   const [fetchProducts, { data: dataProducts, isLoading: isLoadingProducts }] =
     useLazyGetAllProductsQuery();
@@ -65,6 +73,13 @@ export default function CreateOrderFormModal({ open, onClose }) {
     fetchCustomers,
     { data: dataCustomers, isLoading: isLoadingCustomers },
   ] = useLazyGetAllCustomersQuery();
+
+  const [createCustomer] = useCreateCustomerMutation();
+
+  useEffect(() => {
+    const pm = PAYMENT_METHODS.map((method) => ({ value: method, label: method.toLowerCase().replace("_", " ") }));
+    setPaymentMethodList(pm);
+  }, []);
 
   useEffect(() => {
     fetchProducts();
@@ -104,6 +119,12 @@ export default function CreateOrderFormModal({ open, onClose }) {
       { ...selectedProduct, total: 0, selectedQuantity: 0 },
     ]);
   }, [selectedProduct]);
+
+  useEffect(() => {
+    if (!selectedProductsList || selectedProductsList.length === 0) setTotal(0);
+    const orderTotal = selectedProductsList.reduce((fullTotal, currentProduct) => fullTotal + currentProduct?.total, 0);
+    setTotal(orderTotal);
+  }, [selectedProductsList]);
 
   const steps = [
     {
@@ -153,6 +174,7 @@ export default function CreateOrderFormModal({ open, onClose }) {
                 </List.Item>
               )}
             />
+            <div style={{ width: "95%", display: "flex", flexDirection: "row", justifyContent: "end" }}><>Total: </><b>$ {total}</b></div>
           </div>
           <SelectProductModal
             open={showProductModal}
@@ -243,6 +265,8 @@ export default function CreateOrderFormModal({ open, onClose }) {
                         phone: value,
                       });
                     }}
+                    maxLength={10}
+                    minLength={10}
                     value={newCustomer.phone}
                     size="large"
                     placeholder="Phone"
@@ -274,8 +298,9 @@ export default function CreateOrderFormModal({ open, onClose }) {
               <div style={{ width: "100%", display: "flex", justifyContent: "end", margin: "0 0 10px 0" }}>
                 <Button
                   disabled={
-                    (!newCustomer.name || !newCustomer.last_name || !newCustomer.phone || !newCustomer.email || !emailValidator(newCustomer.email))
+                    (!newCustomer.name || !newCustomer.last_name || !newCustomer.phone || newCustomer.phone.length !== 10 || isNaN(+newCustomer.phone) || !newCustomer.email || !emailValidator(newCustomer.email))
                   }
+                  onClick={() => handleCreateCustomer()}
                 >
                   Create customer
                 </Button>
@@ -297,7 +322,7 @@ export default function CreateOrderFormModal({ open, onClose }) {
                   filterOption={(input, option) =>
                     (option?.label ?? "")
                       .toLowerCase()
-                      .includes(input.toLowerCase())
+                      .includes(input?.toLowerCase())
                   }
                   options={customersList ?? []}
                   onChange={(e) => handleSelectCustomerChange(e)}
@@ -322,7 +347,53 @@ export default function CreateOrderFormModal({ open, onClose }) {
     },
     {
       title: "Notes",
-      content: <>notes</>,
+      content: (
+        <div style={{ marginBottom: "45px", padding: "0 15px", maxHeight: "300px", overflowY: "auto" }}>
+          <TextArea
+            showCount
+            maxLength={100}
+            onChange={e => setNotes(e.target.value)}
+            value={notes}
+            placeholder="disable resize"
+            style={{ height: 120, resize: 'none' }}
+          />
+          <Select
+            showSearch
+            placeholder="Select a payment method"
+            filterOption={(input, option) =>
+              (option?.label ?? "")
+                .toLowerCase()
+                .includes(input?.toLowerCase())
+            }
+            options={paymentMethodList ?? []}
+            onChange={(e) => setPaymentMethod(e)}
+            size="large"
+            style={{ width: "150px" }}
+          />
+          <div style={{ border: "1px solid gray", borderRadius: "10px", marginTop: "30px", maxHeight: "300px", overflowY: "auto" }}>
+            {
+              (selectedProductsList && selectedProductsList.length > 0) && (
+                selectedProductsList.map((product) => (
+                  <div
+                    key={product._id}
+                    style={{ display: "flex", padding: "10px 10px" }}
+                  >
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <Text>Product: <b>{product?.name}</b></Text> <Text>Quantity: <b>{product?.selectedQuantity}</b></Text> <Text>Total: <b><Text>${product.total}</Text></b></Text>
+                    </div>
+                  </div>
+                ))
+              )
+            }
+          </div>
+          <div style={{ marginTop: "30px", width: "90%", alignItems: "end"}}>Total: <Text>$ <b>{total}</b></Text></div>
+          {
+            (selectedCustomer) && (
+              <div> <Text>Customer: <b>{selectedCustomer.name}</b></Text> </div>
+            )
+          }
+        </div>
+      ),
     },
   ];
 
@@ -370,6 +441,7 @@ export default function CreateOrderFormModal({ open, onClose }) {
       return;
     }
     setSelectedCustomer(findedCustomer);
+    setOrderWithoutCustomer(false);
     setSelectedCustomerItems([
       {
         key: "1",
@@ -393,6 +465,29 @@ export default function CreateOrderFormModal({ open, onClose }) {
       },
     ]);
   };
+
+  const handleCreateCustomer = async () => {
+    const customerResponse = await createCustomer({ ...newCustomer, phone: `+52${newCustomer?.phone}` });
+    if (!customerResponse) {
+      api["error"]({
+        message: "Error",
+        description: "Customer couldn't be created.",
+      });
+      return;
+    }
+    await fetchCustomers();
+    setSelectedCustomer(customerResponse.data);
+    setIsCreateCustomer(false);
+    setCurrentStep(2);
+    setOrderWithoutCustomer(false);
+    setNewCustomer({
+      email: "",
+      last_name: "",
+      name: "",
+      phone: "",
+      status: true,
+    });
+  }
 
   const items = steps?.map((item) => ({
     key: item.title,
@@ -439,6 +534,7 @@ export default function CreateOrderFormModal({ open, onClose }) {
         <div
           style={{
             marginTop: 24,
+            display: "flex"
           }}
         >
           {currentStep < steps.length - 1 && (
@@ -446,7 +542,21 @@ export default function CreateOrderFormModal({ open, onClose }) {
               disabled={
                 currentStep === 0 &&
                 (isThereSomeProductWithoutQuantity ||
-                  selectedProductsList.length === 0)
+                  selectedProductsList.length === 0 ||
+                  total === 0
+                ) ||
+                (currentStep === 1 && (
+                  !isCreateCustomer && (
+                    !selectedCustomer
+                  ) ||
+                  (isCreateCustomer && (
+                    !newCustomer.name ||
+                    !newCustomer.last_name ||
+                    !newCustomer.phone ||
+                    !newCustomer.email ||
+                    !emailValidator(newCustomer.email)
+                  )) || isCreateCustomer
+                ))
               }
               type="primary"
               onClick={() => next()}
@@ -455,7 +565,7 @@ export default function CreateOrderFormModal({ open, onClose }) {
             </Button>
           )}
           {currentStep === steps.length - 1 && (
-            <Button type="primary" onClick={() => null}>
+            <Button disabled={!paymentMethod} type="primary" onClick={() => null}>
               Done
             </Button>
           )}
@@ -469,6 +579,22 @@ export default function CreateOrderFormModal({ open, onClose }) {
               Previous
             </Button>
           )}
+          {
+            currentStep === 1 && (
+              <div style={{ marginLeft: "20px" }}>
+                <Button
+                  onClick={() => {
+                    setSelectedCustomer(null);
+                    setOrderWithoutCustomer(true);
+                    next();
+                  }}
+                  icon={<UserDeleteOutlined />}
+                >
+                  Continue without customer
+                </Button>
+              </div>
+            )
+          }
         </div>
       </Modal>
     </>
