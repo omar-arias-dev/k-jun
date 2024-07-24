@@ -27,10 +27,20 @@ export const tableApi = createApi({
         });
       }
     }),
+    tableToTaken: builder.mutation({
+      query: ({id, body}) => {
+        return ({
+          url: `/to-taken/${id}`,
+          method: "PUT",
+          body,
+        });
+      }
+    }),
   }),
 });
 
 export const {
   useLazyGetAllTablesQuery,
   useCreateTableMutation,
+  useTableToTakenMutation,
 } = tableApi;

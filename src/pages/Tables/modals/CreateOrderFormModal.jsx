@@ -30,20 +30,13 @@ import { useLazyGetAllProductsQuery } from "../../../stores/productStore";
 import { useCreateCustomerMutation, useLazyGetAllCustomersQuery } from "../../../stores/customerStore";
 import { emailValidator } from "../../../utils/validators";
 import { PAYMENT_METHODS } from "../../../common/constants/constants";
+import { useCreateOrderMutation } from "../../../stores/orderStore";
+import { useTableToTakenMutation } from "../../../stores/tableStore";
 
-export default function CreateOrderFormModal({ open, onClose }) {
+export default function CreateOrderFormModal({ open, onClose, tableData, refetch }) {
   const { token } = theme.useToken();
   const [api, contextHolder] = notification.useNotification();
   const [currentStep, setCurrentStep] = useState(0);
-  const [order, setOrder] = useState({
-    items: [],
-    total: 0,
-    type: "DINE_HERE",
-    status: "PENDING",
-    payment_method: "",
-    customer: null,
-    note: "",
-  });
   const [newCustomer, setNewCustomer] = useState({
     name: "",
     last_name: "",
@@ -74,7 +67,9 @@ export default function CreateOrderFormModal({ open, onClose }) {
     { data: dataCustomers, isLoading: isLoadingCustomers },
   ] = useLazyGetAllCustomersQuery();
 
-  const [createCustomer] = useCreateCustomerMutation();
+  const [createCustomer, { data: createCustomerData, isLoading: createCustomerIsLoading }] = useCreateCustomerMutation();
+  const [createOrder, { data: createOrderData, isLoading: createOrderIsLoading }] = useCreateOrderMutation();
+  const [tableToTaken, { data: tableToTakenData, isLoading: tableToTakenIsLoading }] = useTableToTakenMutation();
 
   useEffect(() => {
     const pm = PAYMENT_METHODS.map((method) => ({ value: method, label: method.toLowerCase().replace("_", " ") }));
@@ -489,6 +484,57 @@ export default function CreateOrderFormModal({ open, onClose }) {
     });
   }
 
+  const handleCreateOrder = async () => {
+    let newOrder = {
+      items: [],
+      total: 0,
+      type: "DINE_HERE",
+      status: "PENDING",
+      payment_method: "",
+      customer: null,
+      note: "",
+    };
+    const items = selectedProductsList?.map((product) => ({ product: product._id, price: product.price, quantity: product.selectedQuantity }));
+    newOrder = {
+      ...newOrder,
+      items: items,
+      total: total,
+      payment_method: paymentMethod,
+      customer: orderWithoutCustomer ? null : selectedCustomer._id,
+      note: notes,
+    };
+    const orderResponse = await createOrder(newOrder);
+    if (!orderResponse || !orderResponse?.data) {
+      api["error"]({
+        message: "Error",
+        description: "Order couldn't be saved.",
+      });
+      return;
+    }
+    const tableResponse = await tableToTaken(
+      {
+        id: tableData?._id,
+        body: {
+          available: "TAKEN",
+          current_order: orderResponse?.data?._id ?? null,
+        },
+      }
+    );
+    if (!tableResponse || !tableResponse?.data) {
+      api["error"]({
+        message: "Error",
+        description: "Table couldn't be updated with status TAKEN.",
+      });
+      return;
+    }
+    await refetch();
+    api["success"]({
+      message: "Success",
+      description: `Order ${orderResponse?.data?.order_number} created and table ${tableResponse?.data?.table_number} updated.`,
+    });
+    onClose();
+  }
+
   const items = steps?.map((item) => ({
     key: item.title,
     title: item.title,
@@ -565,7 +611,13 @@ export default function CreateOrderFormModal({ open, onClose }) {
             </Button>
           )}
           {currentStep === steps.length - 1 && (
-            <Button disabled={!paymentMethod} type="primary" onClick={() => null}>
+            <Button
+              onClick={async () => {
+                handleCreateOrder();
+              }}
+              disabled={!paymentMethod}
+              type="primary"
+            >
               Done
             </Button>
           )}

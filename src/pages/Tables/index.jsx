@@ -9,6 +9,7 @@ import CreateOrderFormModal from "./modals/CreateOrderFormModal";
 
 export default function Tables() {
   const [tables, setTables] = useState([]);
+  const [selectedTable, setSelectedTable] = useState(null);
   const [showCreateTableFormModal, setShowCreateTableFormModal] = useState(false);
   const [showCreateOrderFormModal, setShowCreateOrderFormModal] = useState(false);
 
@@ -44,6 +45,7 @@ export default function Tables() {
                   tableData={table}
                   loading={tablesAreLoading}
                   onCreate={() => setShowCreateOrderFormModal(true)}
+                  setSelectedTable={setSelectedTable}
                 />
               </div>
             );
@@ -62,6 +64,7 @@ export default function Tables() {
         onClose={() => {
           setShowCreateOrderFormModal(false);
         }}
+        tableData={selectedTable}
         refetch={fetchTables}
       />
     </div>

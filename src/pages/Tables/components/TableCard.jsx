@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 import tagWithColorValidator from "../utils/TagWithColorValidator";
 const { Meta } = Card;
 
-export default function TableCard({ tableData, loading, onCreate }) {
+export default function TableCard({ tableData, loading, onCreate, setSelectedTable }) {
   return (
     <Badge.Ribbon text={tableData?.available} color={ tableData?.available === "AVAILABLE" ? "green" : "volcano" }>
       <Card
@@ -27,7 +27,13 @@ export default function TableCard({ tableData, loading, onCreate }) {
             tableData?.current_order ?
               <CloseCircleTwoTone key="close" onClick={() => console.log("open close")} twoToneColor="#FF8484" />
               :
-              <PlusCircleTwoTone key="open" onClick={() => onCreate()} twoToneColor="#73CF6B" />
+              <PlusCircleTwoTone key="open"
+                onClick={() => {
+                  onCreate();
+                  setSelectedTable(tableData);
+                }}
+                twoToneColor="#73CF6B"
+              />
           ),
           <EditOutlined key="edit" />,
           <EllipsisOutlined key="ellipsis" />,
