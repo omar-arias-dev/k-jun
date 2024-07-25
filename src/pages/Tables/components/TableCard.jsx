@@ -1,18 +1,18 @@
-import { useEffect, useState } from "react";
-import { Divider, Card, Skeleton, Switch, Tag, Badge } from "antd";
+import { Divider, Card, Skeleton, Badge, Popconfirm } from "antd";
 import {
   EditOutlined,
   EllipsisOutlined,
   DownCircleFilled,
   ClockCircleFilled,
-  CloseCircleTwoTone,
+  DollarTwoTone,
+  DollarCircleFilled,
   PlusCircleTwoTone,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import tagWithColorValidator from "../utils/TagWithColorValidator";
 const { Meta } = Card;
 
-export default function TableCard({ tableData, loading, onCreate, setSelectedTable }) {
+export default function TableCard({ tableData, loading, onCreate, setSelectedTable, onShowPaymentModal }) {
   return (
     <Badge.Ribbon text={tableData?.available} color={ tableData?.available === "AVAILABLE" ? "green" : "volcano" }>
       <Card
@@ -25,7 +25,23 @@ export default function TableCard({ tableData, loading, onCreate, setSelectedTab
         actions={[
           (
             tableData?.current_order ?
-              <CloseCircleTwoTone key="close" onClick={() => console.log("open close")} twoToneColor="#FF8484" />
+              <Popconfirm
+                key="close"
+                title="Confirm Payment"
+                description="Are you sure you want to proceed with the payment for this table?"
+                onConfirm={() => {
+                  onShowPaymentModal();
+                  setSelectedTable(tableData);
+                }}
+                onCancel={() => null}
+                okText="Yes"
+                cancelText="No"
+                icon={<DollarCircleFilled />}
+              >
+                <DollarTwoTone
+                  twoToneColor="#FF8484"
+                />
+              </Popconfirm>
               :
               <PlusCircleTwoTone key="open"
                 onClick={() => {
@@ -49,24 +65,26 @@ export default function TableCard({ tableData, loading, onCreate, setSelectedTab
           {
             tagWithColorValidator(tableData?.current_order?.status ?? null)
           }
-          <p>
-            {
-              tableData?.current_order ?
-                <>
-                  Order: <b>{tableData?.current_order?.order_number}</b>
-                </>
-                :
-                `check`
-            }
-          </p>
-          <p>
-            {
-              tableData?.current_order ?
-                `Started at: ${dayjs(tableData?.current_order?.createdAt).format("HH:mm:ss")} hrs`
-                :
-                `check`
-            }
-          </p>
+          <div style={{ marginTop: "10px" }}>
+            <p>
+              {
+                tableData?.current_order ?
+                  <>
+                    Order: <b>{tableData?.current_order?.order_number}</b>
+                  </>
+                  :
+                  `check`
+              }
+            </p>
+            <p>
+              {
+                tableData?.current_order ?
+                  <p>Started at: <b>{dayjs(tableData?.current_order?.createdAt).format("HH:mm:ss")}</b> hrs</p>
+                  :
+                  `check`
+              }
+            </p>
+          </div>
         </Skeleton>
       </Card>
     </Badge.Ribbon>

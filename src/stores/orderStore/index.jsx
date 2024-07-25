@@ -17,9 +17,19 @@ export const orderApi = createApi({
         });
       }
     }),
+    updateOrderStatus: builder.mutation({
+      query: ({ id, body }) => {
+        return ({
+          url: `/update-status/${id}`,
+          method: "PUT",
+          body,
+        });
+      }
+    }),
   }),
 });
 
 export const {
   useCreateOrderMutation,
+  useUpdateOrderStatusMutation,
 } = orderApi;

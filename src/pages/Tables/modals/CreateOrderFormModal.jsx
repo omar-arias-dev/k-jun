@@ -346,11 +346,11 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
         <div style={{ marginBottom: "45px", padding: "0 15px", maxHeight: "300px", overflowY: "auto" }}>
           <TextArea
             showCount
-            maxLength={100}
+            maxLength={50}
             onChange={e => setNotes(e.target.value)}
             value={notes}
-            placeholder="disable resize"
-            style={{ height: 120, resize: 'none' }}
+            placeholder="Order notes"
+            style={{ height: 60, resize: 'none' }}
           />
           <Select
             showSearch
@@ -365,7 +365,7 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
             size="large"
             style={{ width: "150px" }}
           />
-          <div style={{ border: "1px solid gray", borderRadius: "10px", marginTop: "30px", maxHeight: "300px", overflowY: "auto" }}>
+          <div style={{ border: "1px solid #DEDEDE", borderRadius: "5px", marginTop: "5px", maxHeight: "600px", overflowY: "auto", overflow: "scroll" }}>
             {
               (selectedProductsList && selectedProductsList.length > 0) && (
                 selectedProductsList.map((product) => (
@@ -381,12 +381,6 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
               )
             }
           </div>
-          <div style={{ marginTop: "30px", width: "90%", alignItems: "end"}}>Total: <Text>$ <b>{total}</b></Text></div>
-          {
-            (selectedCustomer) && (
-              <div> <Text>Customer: <b>{selectedCustomer.name}</b></Text> </div>
-            )
-          }
         </div>
       ),
     },
@@ -631,6 +625,16 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
               Previous
             </Button>
           )}
+          {
+            currentStep === 2 && (
+              <div style={{ display: "flex", alignItems: "center", marginLeft: "55px" }}>Order Total: <Text>$ <b>{total}</b></Text></div>
+            )
+          }
+          {
+            (currentStep === 2 && selectedCustomer) && (
+              <div style={{ display: "flex", alignItems: "center", marginLeft: "55px" }}>Customer: <Text> <b> {selectedCustomer?.name}</b></Text></div>
+            )
+          }
           {
             currentStep === 1 && (
               <div style={{ marginLeft: "20px" }}>

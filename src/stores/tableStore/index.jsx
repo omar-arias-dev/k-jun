@@ -36,6 +36,15 @@ export const tableApi = createApi({
         });
       }
     }),
+    tableToAvailable: builder.mutation({
+      query: ({id, body}) => {
+        return ({
+          url: `/to-available/${id}`,
+          method: "PUT",
+          body,
+        });
+      }
+    }),
   }),
 });
 
@@ -43,4 +52,5 @@ export const {
   useLazyGetAllTablesQuery,
   useCreateTableMutation,
   useTableToTakenMutation,
+  useTableToAvailableMutation,
 } = tableApi;
