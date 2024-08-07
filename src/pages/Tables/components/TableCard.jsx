@@ -1,4 +1,5 @@
-import { Divider, Card, Skeleton, Badge, Popconfirm } from "antd";
+import { useEffect, useState } from "react";
+import { Divider, Card, Skeleton, Badge, Popconfirm, Tooltip, Dropdown, Button, Space } from "antd";
 import {
   EditOutlined,
   EllipsisOutlined,
@@ -11,8 +12,54 @@ import {
 import dayjs from "dayjs";
 import tagWithColorValidator from "../utils/TagWithColorValidator";
 const { Meta } = Card;
+import {
+  ORDER_STATUS_ARRAY,
+} from "../../../constant/order";
+import { useUpdateOrderStatusMutation } from "../../../stores/orderStore";
 
-export default function TableCard({ tableData, loading, onCreate, setSelectedTable, onShowPaymentModal }) {
+export default function TableCard({ tableData, loading, onCreate, setSelectedTable, onShowPaymentModal, refetch }) {
+
+  const [selectableOrderStatusList, setSelectableOrderStatusList] = useState([]);
+  const [updateOrderStatus, { data: updateOrderStatusData, isLoading: updateOrderStatusIsLoading }] = useUpdateOrderStatusMutation();
+  
+  useEffect(() => {
+    if (!tableData?.current_order) return;
+    const options = ORDER_STATUS_ARRAY
+      ?.filter((status) => status !== tableData?.current_order?.status)
+      ?.map((status) => ({
+        key: status,
+        label: (
+          <div
+            style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+          >
+            <div
+              onClick={async () => handleOrderStatusChange(tableData?.current_order?._id, status)}
+            >
+              {tagWithColorValidator(status)}
+            </div>
+          </div>
+        ),
+        disabled: updateOrderStatusIsLoading,
+      }));
+    setSelectableOrderStatusList(options);
+  }, [tableData]);
+
+  const handleOrderStatusChange = async (orderId, status) => {
+    const data = await updateOrderStatus({
+      id: orderId,
+      body: {
+        status,
+      },
+    });
+    if (
+      !data ||
+      !data?.data
+    ) {
+      return;
+    }
+    await refetch();
+  }
+
   return (
     <Badge.Ribbon text={tableData?.available} color={ tableData?.available === "AVAILABLE" ? "green" : "volcano" }>
       <Card
@@ -51,7 +98,22 @@ export default function TableCard({ tableData, loading, onCreate, setSelectedTab
                 twoToneColor="#73CF6B"
               />
           ),
-          <EditOutlined key="edit" />,
+          (
+            tableData?.current_order ?
+              <Dropdown
+                menu={{ items: selectableOrderStatusList ?? [] }}
+              >
+                <a onClick={(e) => e.preventDefault()}>
+                  <Space>
+                    <EditOutlined key="edit" />
+                  </Space>
+                </a>
+              </Dropdown >
+              :
+              <Tooltip title="Table has no order assigned">
+                <EditOutlined key="edit" disabled />
+              </Tooltip>
+          ),
           <EllipsisOutlined key="ellipsis" />,
         ]}
       >

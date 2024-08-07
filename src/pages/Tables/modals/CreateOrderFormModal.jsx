@@ -78,13 +78,16 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
 
   useEffect(() => {
     fetchProducts();
+    fetchCustomers();
+  }, []);
+
+  useEffect(() => {
     if (isLoadingProducts || !dataProducts) return;
     if (dataProducts?.length === 0) return;
     setProductsList(dataProducts ?? []);
-  }, [dataProducts]);
+  }, [dataProducts, isLoadingProducts]);
 
   useEffect(() => {
-    fetchCustomers();
     if (isLoadingCustomers || !dataCustomers) return;
     if (dataCustomers?.length === 0) return;
     setCustomers(dataCustomers);
@@ -93,7 +96,7 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
       label: `${customer?.name} ${customer?.last_name}`,
     }));
     setCustomersList(selectableCustomers);
-  }, [dataCustomers]);
+  }, [dataCustomers, isLoadingCustomers]);
 
   useEffect(() => {
     if (selectedProduct === null) return;
@@ -609,7 +612,7 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
               onClick={async () => {
                 handleCreateOrder();
               }}
-              disabled={!paymentMethod}
+              disabled={!paymentMethod || !notes}
               type="primary"
             >
               Done

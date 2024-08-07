@@ -13,6 +13,9 @@ export const productApi = createApi({
         return ({
           url: "product",
           method: "GET",
+          headers: { 
+            'Cache-Control': 'no-cache', // Solve Error 304.
+           },
         })
       },
     }),

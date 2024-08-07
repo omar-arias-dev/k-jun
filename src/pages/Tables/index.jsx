@@ -19,9 +19,12 @@ export default function Tables() {
 
   useEffect(() => {
     fetchTables();
-    if (!tablesData) return;
-    setTables(tablesData && tablesData?.length > 0 ? tablesData : []);
-  }, [tablesData]);
+  }, []);
+
+  useEffect(() => {
+    if (!tablesData || tablesAreLoading) return;
+    setTables(tablesData?.length > 0 ? tablesData : []);
+  }, [tablesData, tablesAreLoading]);
 
   return (
     <div style={{ width: "100%" }}>
@@ -49,6 +52,7 @@ export default function Tables() {
                   onCreate={() => setShowCreateOrderFormModal(true)}
                   setSelectedTable={setSelectedTable}
                   onShowPaymentModal={() => setShowPaymentModal(true)}
+                  refetch={fetchTables}
                 />
               </div>
             );
