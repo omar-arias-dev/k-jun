@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Divider, Card, Skeleton, Badge, Popconfirm, Tooltip, Dropdown, Button, Space } from "antd";
+import { Divider, Card, Skeleton, Badge, Popconfirm, Tooltip, Dropdown, Space, notification } from "antd";
 import {
   EditOutlined,
   EllipsisOutlined,
@@ -13,18 +13,24 @@ import dayjs from "dayjs";
 import tagWithColorValidator from "../utils/TagWithColorValidator";
 const { Meta } = Card;
 import {
+  PAID,
+  REOPENED,
+  CANCELED,
   ORDER_STATUS_ARRAY,
 } from "../../../constant/order";
 import { useUpdateOrderStatusMutation } from "../../../stores/orderStore";
+import { useCancelOrderTableMutation } from "../../../stores/tableStore";
 
 export default function TableCard({ tableData, loading, onCreate, setSelectedTable, onShowPaymentModal, refetch }) {
-
+  const [api, contextHolder] = notification.useNotification();
   const [selectableOrderStatusList, setSelectableOrderStatusList] = useState([]);
   const [updateOrderStatus, { data: updateOrderStatusData, isLoading: updateOrderStatusIsLoading }] = useUpdateOrderStatusMutation();
+  const [cancelOrderTable, { data: cancelOrderTableData, isLoading: cancelOrderTableIsLoading }] = useCancelOrderTableMutation();
   
   useEffect(() => {
     if (!tableData?.current_order) return;
     const options = ORDER_STATUS_ARRAY
+      ?.filter((status) => status !== PAID && status !== REOPENED)
       ?.filter((status) => status !== tableData?.current_order?.status)
       ?.map((status) => ({
         key: status,
@@ -32,11 +38,46 @@ export default function TableCard({ tableData, loading, onCreate, setSelectedTab
           <div
             style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
           >
-            <div
-              onClick={async () => handleOrderStatusChange(tableData?.current_order?._id, status)}
-            >
-              {tagWithColorValidator(status)}
-            </div>
+            {
+              status !== CANCELED ? (
+                <div
+                  onClick={async () => handleOrderStatusChange(tableData?.current_order?._id, status)}
+                >
+                  {tagWithColorValidator(status)}
+                </div>
+              ) : (
+                <Popconfirm
+                  title="Cancel order"
+                  description="Are you sure to cancel this order?"
+                  onConfirm={async () => {
+                    const data = await cancelOrderTable(tableData?._id);
+                    if (
+                      !data ||
+                      !data?.data ||
+                      !data?.data?.table
+                    ) {
+                      api["error"]({
+                        message: 'Error',
+                        description:
+                          'Table was not be updated.',
+                      });
+                      refetch();
+                      return;
+                    }
+                    api["success"]({
+                      message: 'Success',
+                      description:
+                        'Table was updated successfully.',
+                    });
+                    refetch();
+                  }}
+                  okText="Ok"
+                  cancelText="No"
+                >
+                  {tagWithColorValidator(status)}
+                </Popconfirm>
+              )
+            }
           </div>
         ),
         disabled: updateOrderStatusIsLoading,
@@ -62,6 +103,7 @@ export default function TableCard({ tableData, loading, onCreate, setSelectedTab
 
   return (
     <Badge.Ribbon text={tableData?.available} color={ tableData?.available === "AVAILABLE" ? "green" : "volcano" }>
+      {contextHolder}
       <Card
         style={{
           width: 300,
@@ -100,15 +142,17 @@ export default function TableCard({ tableData, loading, onCreate, setSelectedTab
           ),
           (
             tableData?.current_order ?
-              <Dropdown
-                menu={{ items: selectableOrderStatusList ?? [] }}
-              >
-                <a onClick={(e) => e.preventDefault()}>
-                  <Space>
-                    <EditOutlined key="edit" />
-                  </Space>
-                </a>
-              </Dropdown >
+              <Tooltip title="Change order status">
+                <Dropdown
+                  menu={{ items: selectableOrderStatusList ?? [] }}
+                >
+                  <a onClick={(e) => e.preventDefault()}>
+                    <Space>
+                      <EditOutlined key="edit" />
+                    </Space>
+                  </a>
+                </Dropdown >
+              </Tooltip>
               :
               <Tooltip title="Table has no order assigned">
                 <EditOutlined key="edit" disabled />

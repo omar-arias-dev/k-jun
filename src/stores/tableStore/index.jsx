@@ -45,6 +45,14 @@ export const tableApi = createApi({
         });
       }
     }),
+    cancelOrderTable: builder.mutation({
+      query: (id) => {
+        return ({
+          url: `/cancel-order-table/${id}`,
+          method: "PUT",
+        });
+      }
+    }),
   }),
 });
 
@@ -53,4 +61,5 @@ export const {
   useCreateTableMutation,
   useTableToTakenMutation,
   useTableToAvailableMutation,
+  useCancelOrderTableMutation,
 } = tableApi;

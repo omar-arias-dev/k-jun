@@ -124,6 +124,27 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
     setTotal(orderTotal);
   }, [selectedProductsList]);
 
+  const handleClose = () => {
+    onClose();
+    setCurrentStep(0);
+    setNewCustomer({
+      name: "",
+      last_name: "",
+      phone: "",
+      email: "",
+      status: true,
+    });
+    setSelectedProductsList([]);
+    setSelectedProduct(null);
+    setTotal(0);
+    setOrderWithoutCustomer(true);
+    setIsCreateCustomer(false);
+    setSelectedCustomer(null);
+    setSelectedCustomerItems([null]);
+    setNotes("");
+    setPaymentMethod("");
+  }
+
   const steps = [
     {
       title: "Order Products",
@@ -529,7 +550,8 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
       message: "Success",
       description: `Order ${orderResponse?.data?.order_number} created and table ${tableResponse?.data?.table_number} updated.`,
     });
-    onClose();
+    //onClose();
+    handleClose();
   }
 
   const items = steps?.map((item) => ({
@@ -556,14 +578,16 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
         open={open}
         onCancel={() => {
           //if (createdTableLoading) return;
-          onClose();
+          //onClose();
+          handleClose();
         }}
         footer={[
           <Button
             key="back"
             onClick={() => {
               //if (createdTableLoading) return;
-              onClose();
+              //onClose();
+              handleClose();
             }}
           >
             Cancel
