@@ -26,10 +26,20 @@ export const orderApi = createApi({
         });
       }
     }),
+    updateOrderHistory: builder.mutation({
+      query: ({ id, body }) => {
+        return ({
+          method: "PUT",
+          url: `/update-history/${id}`,
+          body,
+        });
+      }
+    }),
   }),
 });
 
 export const {
   useCreateOrderMutation,
   useUpdateOrderStatusMutation,
+  useUpdateOrderHistoryMutation,
 } = orderApi;
