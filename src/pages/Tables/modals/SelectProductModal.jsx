@@ -19,6 +19,7 @@ export default function SelectProductModal({ open, onClose, productList, isLoadi
   useEffect(() => {
     if (query === "") {
       setFilteredData(productList);
+      return;
     };
     const filtered = productList?.filter((product) => product?.name?.toLowerCase()?.includes(query?.toLowerCase()));
     setFilteredData(filtered);
@@ -26,7 +27,7 @@ export default function SelectProductModal({ open, onClose, productList, isLoadi
 
   return (
     <Modal
-      title={`Create order`}
+      title={`Select products`}
       centered
       open={open}
       onCancel={() => {

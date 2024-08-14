@@ -54,7 +54,7 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
   const [customers, setCustomers] = useState([]);
   const [customersList, setCustomersList] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [selectedCustomerItems, setSelectedCustomerItems] = useState([null]);
+  const [selectedCustomerItems, setSelectedCustomerItems] = useState(null);
   const [notes, setNotes] = useState("");
   const [paymentMethodList, setPaymentMethodList] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -140,7 +140,7 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
     setOrderWithoutCustomer(true);
     setIsCreateCustomer(false);
     setSelectedCustomer(null);
-    setSelectedCustomerItems([null]);
+    setSelectedCustomerItems(null);
     setNotes("");
     setPaymentMethod("");
   }
@@ -317,7 +317,7 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
               <div style={{ width: "100%", display: "flex", justifyContent: "end", margin: "0 0 10px 0" }}>
                 <Button
                   disabled={
-                    (!newCustomer.name || !newCustomer.last_name || !newCustomer.phone || newCustomer.phone.length !== 10 || isNaN(+newCustomer.phone) || !newCustomer.email || !emailValidator(newCustomer.email))
+                    (createCustomerIsLoading || !newCustomer.name || !newCustomer.last_name || !newCustomer.phone || newCustomer.phone.length !== 10 || isNaN(+newCustomer.phone) || !newCustomer.email || !emailValidator(newCustomer.email))
                   }
                   onClick={() => handleCreateCustomer()}
                 >
@@ -481,15 +481,16 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
 
   const handleCreateCustomer = async () => {
     const customerResponse = await createCustomer({ ...newCustomer, phone: `+52${newCustomer?.phone}` });
-    if (!customerResponse) {
+    if (!customerResponse || !customerResponse?.data) {
       api["error"]({
         message: "Error",
-        description: "Customer couldn't be created.",
+        description: `${customerResponse?.error?.data?.message?.[0] ?? "Customer couldn't be created."}`,
       });
       return;
     }
     await fetchCustomers();
-    setSelectedCustomer(customerResponse.data);
+    const customerCreated = customerResponse?.data ?? null;
+    setSelectedCustomer(customerCreated);
     setIsCreateCustomer(false);
     setCurrentStep(2);
     setOrderWithoutCustomer(false);
@@ -500,6 +501,29 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
       phone: "",
       status: true,
     });
+    if (!customerCreated) return;
+    setSelectedCustomerItems([
+      {
+        key: "1",
+        label: "Name",
+        children: `${customerCreated?.name} ${customerCreated?.last_name}`,
+      },
+      {
+        key: "2",
+        label: "Phone",
+        children: `${customerCreated?.phone}`,
+      },
+      {
+        key: "3",
+        label: "Email",
+        children: `${customerCreated?.email}`,
+      },
+      {
+        key: "4",
+        label: "Created At",
+        children: `${dayjs(customerCreated?.createdAt).format("DD/MM/YYYY")}`,
+      },
+    ]);
   }
 
   const handleCreateOrder = async () => {
@@ -550,7 +574,6 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
       message: "Success",
       description: `Order ${orderResponse?.data?.order_number} created and table ${tableResponse?.data?.table_number} updated.`,
     });
-    //onClose();
     handleClose();
   }
 
@@ -576,17 +599,41 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
         title={`Create order`}
         centered
         open={open}
+        loading={
+          isLoadingProducts ||
+          isLoadingCustomers ||
+          createCustomerIsLoading ||
+          createOrderIsLoading ||
+          tableToTakenIsLoading
+        }
+        disabled={
+          isLoadingProducts ||
+          isLoadingCustomers ||
+          createCustomerIsLoading ||
+          createOrderIsLoading ||
+          tableToTakenIsLoading
+        }
         onCancel={() => {
-          //if (createdTableLoading) return;
-          //onClose();
           handleClose();
         }}
         footer={[
           <Button
             key="back"
+            loading={
+              isLoadingProducts ||
+              isLoadingCustomers ||
+              createCustomerIsLoading ||
+              createOrderIsLoading ||
+              tableToTakenIsLoading
+            }
+            disabled={
+              isLoadingProducts ||
+              isLoadingCustomers ||
+              createCustomerIsLoading ||
+              createOrderIsLoading ||
+              tableToTakenIsLoading
+            }
             onClick={() => {
-              //if (createdTableLoading) return;
-              //onClose();
               handleClose();
             }}
           >
@@ -636,7 +683,15 @@ export default function CreateOrderFormModal({ open, onClose, tableData, refetch
               onClick={async () => {
                 handleCreateOrder();
               }}
-              disabled={!paymentMethod || !notes}
+              disabled={
+                !paymentMethod ||
+                !notes ||
+                isLoadingProducts ||
+                isLoadingCustomers ||
+                createCustomerIsLoading ||
+                createOrderIsLoading ||
+                tableToTakenIsLoading
+              }
               type="primary"
             >
               Done

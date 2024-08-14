@@ -7,6 +7,7 @@ import TableCard from "./components/TableCard";
 import CreateTableFormModal from "./modals/CreateTableFormModal";
 import CreateOrderFormModal from "./modals/CreateOrderFormModal";
 import PaymentModal from "./modals/PaymentModal";
+import AddOrRemoveProductModal from "./modals/AddOrRemoveProductModal";
 
 export default function Tables() {
   const [tables, setTables] = useState([]);
@@ -14,6 +15,7 @@ export default function Tables() {
   const [showCreateTableFormModal, setShowCreateTableFormModal] = useState(false);
   const [showCreateOrderFormModal, setShowCreateOrderFormModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showAddOrRemoveProductModal, setShowAddOrRemoveProductModal] = useState(false);
 
   const [fetchTables, { data: tablesData, isLoading: tablesAreLoading }] = useLazyGetAllTablesQuery();
 
@@ -52,6 +54,7 @@ export default function Tables() {
                   onCreate={() => setShowCreateOrderFormModal(true)}
                   setSelectedTable={setSelectedTable}
                   onShowPaymentModal={() => setShowPaymentModal(true)}
+                  onAddOrRemoveProductModal={() => setShowAddOrRemoveProductModal(true)}
                   refetch={fetchTables}
                 />
               </div>
@@ -78,6 +81,14 @@ export default function Tables() {
         open={showPaymentModal}
         onClose={() => {
           setShowPaymentModal(false);
+        }}
+        tableData={selectedTable}
+        refetch={fetchTables}
+      />
+      <AddOrRemoveProductModal
+        open={showAddOrRemoveProductModal}
+        onClose={() => {
+          setShowAddOrRemoveProductModal(false);
         }}
         tableData={selectedTable}
         refetch={fetchTables}

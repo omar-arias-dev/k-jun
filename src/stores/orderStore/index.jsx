@@ -35,6 +35,23 @@ export const orderApi = createApi({
         });
       }
     }),
+    getOrderById: builder.query({
+      query: (id) => {
+        return ({
+          method: "GET",
+          url: `/${id}`,
+        });
+      }
+    }),
+    updateOrderItems: builder.mutation({
+      query: ({ id, body }) => {
+        return ({
+          method: "PUT",
+          url: `/update-items/${id}`,
+          body,
+        });
+      }
+    }),
   }),
 });
 
@@ -42,4 +59,6 @@ export const {
   useCreateOrderMutation,
   useUpdateOrderStatusMutation,
   useUpdateOrderHistoryMutation,
+  useLazyGetOrderByIdQuery,
+  useUpdateOrderItemsMutation,
 } = orderApi;

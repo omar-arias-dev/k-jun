@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Divider, Card, Skeleton, Badge, Popconfirm, Tooltip, Dropdown, Space, notification } from "antd";
+import { Divider, Card, Skeleton, Badge, Popconfirm, Tooltip, Dropdown, Space, Button, notification } from "antd";
 import {
   EditOutlined,
   EllipsisOutlined,
@@ -8,6 +8,7 @@ import {
   DollarTwoTone,
   DollarCircleFilled,
   PlusCircleTwoTone,
+  ProductOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import tagWithColorValidator from "../utils/TagWithColorValidator";
@@ -21,7 +22,7 @@ import {
 import { useUpdateOrderStatusMutation } from "../../../stores/orderStore";
 import { useCancelOrderTableMutation } from "../../../stores/tableStore";
 
-export default function TableCard({ tableData, loading, onCreate, setSelectedTable, onShowPaymentModal, refetch }) {
+export default function TableCard({ tableData, loading, onCreate, setSelectedTable, onShowPaymentModal, onAddOrRemoveProductModal, refetch }) {
   const [api, contextHolder] = notification.useNotification();
   const [selectableOrderStatusList, setSelectableOrderStatusList] = useState([]);
   const [updateOrderStatus, { data: updateOrderStatusData, isLoading: updateOrderStatusIsLoading }] = useUpdateOrderStatusMutation();
@@ -158,6 +159,15 @@ export default function TableCard({ tableData, loading, onCreate, setSelectedTab
                 <EditOutlined key="edit" disabled />
               </Tooltip>
           ),
+          <Tooltip title={tableData?.current_order ? "Add or remove product" : "Table has no order assigned"}>
+            <ProductOutlined
+              onClick={() =>  {
+                if (!tableData?.current_order) return;
+                setSelectedTable(tableData);
+                onAddOrRemoveProductModal();
+              }}
+            />
+          </Tooltip>,
           <EllipsisOutlined key="ellipsis" />,
         ]}
       >
@@ -179,7 +189,15 @@ export default function TableCard({ tableData, loading, onCreate, setSelectedTab
                     Order: <b>{tableData?.current_order?.order_number}</b>
                   </>
                   :
-                  `check`
+                  `- - -`
+              }
+            </p>
+            <p>
+              {
+                tableData?.current_order ?
+                  <p>Total: <b>$ {tableData?.current_order?.total ?? 0}</b></p>
+                  :
+                  `- - -`
               }
             </p>
             <p>
@@ -187,7 +205,7 @@ export default function TableCard({ tableData, loading, onCreate, setSelectedTab
                 tableData?.current_order ?
                   <p>Started at: <b>{dayjs(tableData?.current_order?.createdAt).format("HH:mm:ss")}</b> hrs</p>
                   :
-                  `check`
+                  `- - -`
               }
             </p>
           </div>
