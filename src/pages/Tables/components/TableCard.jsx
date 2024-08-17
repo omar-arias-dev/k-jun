@@ -22,7 +22,7 @@ import {
 import { useUpdateOrderStatusMutation } from "../../../stores/orderStore";
 import { useCancelOrderTableMutation } from "../../../stores/tableStore";
 
-export default function TableCard({ tableData, loading, onCreate, setSelectedTable, onShowPaymentModal, onAddOrRemoveProductModal, refetch }) {
+export default function TableCard({ tableData, loading, onCreate, setSelectedTable, onShowPaymentModal, onAddOrRemoveProductModal, onConfigureTableModal, refetch }) {
   const [api, contextHolder] = notification.useNotification();
   const [selectableOrderStatusList, setSelectableOrderStatusList] = useState([]);
   const [updateOrderStatus, { data: updateOrderStatusData, isLoading: updateOrderStatusIsLoading }] = useUpdateOrderStatusMutation();
@@ -168,7 +168,15 @@ export default function TableCard({ tableData, loading, onCreate, setSelectedTab
               }}
             />
           </Tooltip>,
-          <EllipsisOutlined key="ellipsis" />,
+          <Tooltip title={tableData?.current_order ? "Close order to configure table" : "Configure table"}>
+            <EllipsisOutlined
+              onClick={() => {
+                if (tableData?.current_order) return;
+                setSelectedTable(tableData);
+                onConfigureTableModal();
+              }}
+            />
+          </Tooltip>,
         ]}
       >
         <Skeleton loading={loading} active paragraph={{ rows: 1 }}>

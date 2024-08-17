@@ -27,6 +27,23 @@ export const tableApi = createApi({
         });
       }
     }),
+    updateTableById: builder.mutation({
+      query: ({ id, body }) => {
+        return ({
+          url: `/${id}`,
+          method: "PUT",
+          body,
+        });
+      }
+    }),
+    deleteTable: builder.mutation({
+      query: (id) => {
+        return ({
+          url: `/${id}`,
+          method: "DELETE",
+        });
+      }
+    }),
     tableToTaken: builder.mutation({
       query: ({id, body}) => {
         return ({
@@ -59,6 +76,8 @@ export const tableApi = createApi({
 export const {
   useLazyGetAllTablesQuery,
   useCreateTableMutation,
+  useUpdateTableByIdMutation,
+  useDeleteTableMutation,
   useTableToTakenMutation,
   useTableToAvailableMutation,
   useCancelOrderTableMutation,

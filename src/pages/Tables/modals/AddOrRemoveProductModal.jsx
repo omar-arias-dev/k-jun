@@ -28,7 +28,7 @@ export default function AddOrRemoveProductModal({ open, onClose, tableData, refe
   }, [dataProducts, isLoadingProducts]);
 
   useEffect(() => {
-    if (!tableData) return;
+    if (!tableData || !open) return;
     fetchProducts();
     async function fetchOrder() {
       const response = await getOrder(tableData?.current_order?._id);
@@ -96,6 +96,13 @@ export default function AddOrRemoveProductModal({ open, onClose, tableData, refe
   }
 
   const handleDeleteProduct = (item, index) => {
+    if (orderProducts.length === 1) {
+      api["error"]({
+        message: "Error",
+        description: "Please add a product first.",
+      });
+      return;
+    }
     const filteredProducts = orderProducts?.filter(
       (product) => product?._id !== item?._id
     );
@@ -158,7 +165,7 @@ export default function AddOrRemoveProductModal({ open, onClose, tableData, refe
       loading={false}
       disabled={isLoadingProducts || getOrderIsLoading || updateOrderItemsIsLoading}
       onCancel={() => {
-        refetch();
+        // refetch();
         handleClose();
       }}
       footer={[
