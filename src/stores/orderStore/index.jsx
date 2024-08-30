@@ -52,6 +52,25 @@ export const orderApi = createApi({
         });
       }
     }),
+    getAllPopulatedPaginatedOrders: builder.query({
+      query: ({ keyword, page, limit }) => {
+        const params = {
+          page,
+          limit,
+        }
+        if (keyword !== "") {
+          params.keyword = keyword;
+        }
+        return ({
+          url: "",
+          method: "GET",
+          params,
+          headers: { 
+            'Cache-Control': 'no-cache',
+          }
+        });
+      }
+    }),
   }),
 });
 
@@ -61,4 +80,5 @@ export const {
   useUpdateOrderHistoryMutation,
   useLazyGetOrderByIdQuery,
   useUpdateOrderItemsMutation,
+  useLazyGetAllPopulatedPaginatedOrdersQuery,
 } = orderApi;
