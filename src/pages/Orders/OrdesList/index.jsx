@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Button, Table, Typography, Input } from "antd";
+import { Button, Table, Typography, Input, Space, Tooltip } from "antd";
+import { ProfileTwoTone, BookTwoTone } from "@ant-design/icons";
 const { Title } = Typography;
 import dayjs from "dayjs";
 import { useLazyGetAllPopulatedPaginatedOrdersQuery } from "../../../stores/orderStore";
@@ -7,51 +8,8 @@ import OrderTypeFormatter from "../components/orderTypeFormatter.jsx";
 import PaymentMethodFormatter from "../components/PaymentMethodFormatter.jsx";
 import { moneyFormatter } from "../../../utils/functions/currencyFormatter.js";
 import tagWithColorValidator from "../../Tables/utils/TagWithColorValidator.jsx";
-
-const columns = [
-  {
-    title: 'Order number',
-    dataIndex: 'order_number',
-    align: "center",
-    render: (orderNumber) => (<b>{orderNumber}</b>),
-  },
-  {
-    title: 'Total',
-    dataIndex: 'total',
-    align: "center",
-    render: (total) => moneyFormatter(total),
-  },
-  {
-    title: 'Type',
-    dataIndex: 'type',
-    align: "center",
-    render: (type) => (<OrderTypeFormatter type={type} />),
-  },
-  {
-    title: 'Status',
-    dataIndex: 'status',
-    align: "center",
-    render: (status) => tagWithColorValidator(status),
-  },
-  {
-    title: 'Payment method',
-    dataIndex: 'payment_method',
-    align: "center",
-    render: (paymentMethod) => (<PaymentMethodFormatter paymentMethod={paymentMethod} />),
-  },
-  {
-    title: 'Created At',
-    dataIndex: 'createdAt',
-    align: "center",
-    render: (date) => (<>{dayjs(date).format('DD/MM/YYYY')}</>),
-  },
-  {
-    title: 'Updated At',
-    dataIndex: 'updatedAt',
-    align: "center",
-    render: (date) => (<>{dayjs(date).format('DD/MM/YYYY')}</>),
-  },
-];
+import ProductsDetailsModal from "../modals/ProductsDetailsModal.jsx";
+import NotesModal from "../modals/NotesModal.jsx";
 
 export default function OrdersList() {
   const [orders, setOrders] = useState([]);
@@ -60,6 +18,9 @@ export default function OrdersList() {
   const [limit, setLimit] = useState(10);
   const [keyword, setKeyword] = useState("");
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [showProductsDetails, setShowProductsDetails] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [currentOrder, setCurrentOrder] = useState(null);
 
   const [getOrders, { data: getOrdersData, isLoading: getOrdersIsLoading }] = useLazyGetAllPopulatedPaginatedOrdersQuery();
 
@@ -95,6 +56,76 @@ export default function OrdersList() {
   const onSelectChange = (newSelectedRowKeys) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
+
+  const columns = [
+    {
+      title: 'Order number',
+      dataIndex: 'order_number',
+      align: "center",
+      render: (orderNumber) => (<b>{orderNumber}</b>),
+    },
+    {
+      title: 'Total',
+      dataIndex: 'total',
+      align: "center",
+      render: (total) => moneyFormatter(total),
+    },
+    {
+      title: 'Type',
+      dataIndex: 'type',
+      align: "center",
+      render: (type) => (<OrderTypeFormatter type={type} />),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      align: "center",
+      render: (status) => tagWithColorValidator(status),
+    },
+    {
+      title: 'Payment method',
+      dataIndex: 'payment_method',
+      align: "center",
+      render: (paymentMethod) => (<PaymentMethodFormatter paymentMethod={paymentMethod} />),
+    },
+    {
+      title: 'Created At',
+      dataIndex: 'createdAt',
+      align: "center",
+      render: (date) => (<>{dayjs(date).format('DD/MM/YYYY HH:mm')}</>),
+    },
+    {
+      title: 'Updated At',
+      dataIndex: 'updatedAt',
+      align: "center",
+      render: (date) => (<>{dayjs(date).format('DD/MM/YYYY HH:mm')}</>),
+    },
+    {
+      title: 'Order details',
+      align: 'center',
+      render: (record) => (
+        <Space>
+          <Tooltip title="Products">
+            <ProfileTwoTone
+              onClick={() => {
+                setCurrentOrder(record);
+                setShowProductsDetails(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Notes">
+            <BookTwoTone
+              onClick={() => {
+                setCurrentOrder(record);
+                setShowNotes(true);
+              }}
+            />
+          </Tooltip>
+        </Space>
+      ),
+    }
+  ];
+
   const rowSelection = {
     selectedRowKeys,
     onChange: onSelectChange,
@@ -108,7 +139,7 @@ export default function OrdersList() {
       <div style={{ marginBottom: "4px" }}>
         <Input
           size="large"
-          placeholder="large size"
+          placeholder="Order number"
           addonBefore="Search by order number"
           maxLength={10}
           onChange={handleKeywordChange}
@@ -116,7 +147,7 @@ export default function OrdersList() {
       </div>
       <Table
         rowKey={"_id"}
-        rowSelection={rowSelection}
+        //rowSelection={rowSelection}
         columns={columns}
         dataSource={orders}
         loading={getOrdersIsLoading}
@@ -131,6 +162,30 @@ export default function OrdersList() {
           position: ["bottomRight",],
         }}
       />
+      {
+        (showProductsDetails && currentOrder) && (
+          <ProductsDetailsModal
+            open={showProductsDetails}
+            onClose={() => {
+              setShowProductsDetails(false);
+              setCurrentOrder(null);
+            }}
+            order={currentOrder}
+          />
+        )
+      }
+      {
+        (showNotes && currentOrder) && (
+          <NotesModal
+            open={showNotes}
+            onClose={() => {
+              setShowNotes(false);
+              setCurrentOrder(null);
+            }}
+            order={currentOrder}
+          />
+        )
+      }
     </div>
   );
 };

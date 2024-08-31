@@ -45,11 +45,11 @@ function DebitCardIcon(props) {
 export default function PaymentMethodFormatter({ paymentMethod }) {
   switch (paymentMethod) {
     case "CASH":
-      return <Tag bordered={false} color="green"><div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ marginRight: "2px", display: "flex", alignItems: "center", }}><CashIcon /></div> Cash</div></Tag>
+      return <Tag color="green"><div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ marginRight: "2px", display: "flex", alignItems: "center", }}><CashIcon /></div> Cash</div></Tag>
     case "CREDIT_CARD":
-      return <Tag bordered={false} color="red"><div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ marginRight: "2px", display: "flex", alignItems: "center", }}><CreditCardIcon /></div> Credit Card</div></Tag>
+      return <Tag color="red"><div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ marginRight: "2px", display: "flex", alignItems: "center", }}><CreditCardIcon /></div> Credit Card</div></Tag>
       case "DEBIT_CARD":
-      return <Tag bordered={false} color="blue"><div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ marginRight: "2px", display: "flex", alignItems: "center", }}><DebitCardIcon /></div> Debit Card</div></Tag>
+      return <Tag color="blue"><div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ marginRight: "2px", display: "flex", alignItems: "center", }}><DebitCardIcon /></div> Debit Card</div></Tag>
     default:
       return null;
   }

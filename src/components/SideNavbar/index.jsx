@@ -33,10 +33,10 @@ const items = [
         key: "orders-list",
         label: "Orders List",
       },
-      {
+      /* {
         key: "orders-create",
         label: "Create Order",
-      },
+      }, */
     ],
   },
   {
