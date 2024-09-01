@@ -25,6 +25,11 @@ const items = [
     icon: <GoldOutlined />,
   },
   {
+    key: "delivering",
+    label: "Delivering",
+    icon: <TruckOutlined />,
+  },
+  {
     key: "orders",
     label: "Orders",
     icon: <ShoppingOutlined />,
@@ -38,11 +43,6 @@ const items = [
         label: "Create Order",
       }, */
     ],
-  },
-  {
-    key: "delivering",
-    label: "Delivering",
-    icon: <TruckOutlined />,
   },
   {
     key: "products",
@@ -111,6 +111,9 @@ export default function SideNavbar() {
         break;
       case "tables":
         navigate("/tables");
+        break;
+      case "delivering":
+        navigate("/delivering");
         break;
       default:
         break;

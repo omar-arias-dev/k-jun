@@ -71,6 +71,18 @@ export const orderApi = createApi({
         });
       }
     }),
+    getOrdersByType: builder.query({
+      query: (type) => {
+        return ({
+          method: "GET",
+          url: "/orders/type",
+          params: { type },
+          headers: { 
+            'Cache-Control': 'no-cache',
+          },
+        });
+      }
+    }),
   }),
 });
 
@@ -81,4 +93,5 @@ export const {
   useLazyGetOrderByIdQuery,
   useUpdateOrderItemsMutation,
   useLazyGetAllPopulatedPaginatedOrdersQuery,
+  useLazyGetOrdersByTypeQuery,
 } = orderApi;

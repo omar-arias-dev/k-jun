@@ -8,6 +8,7 @@ import CreateOrder from "../pages/Orders/CreateOrder";
 import ProductsList from "../pages/Products/ProductsList";
 import CreateProduct from "../pages/Products/CreateProduct";
 import Tables from "../pages/Tables";
+import Delivering from "../pages/Delivering";
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
       {
         path: "/tables",
         element: <Tables />,
+      },
+      {
+        path: "/delivering",
+        element: <Delivering />,
       },
     ],
   },
